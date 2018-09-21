@@ -9,21 +9,27 @@ const logger = require("morgan");
 const index = require("./routes/index");
 const authRoutes = require("./routes/auth");
 const path = require("path");
-const session = require('express-session');
-const MongoStore = require('connect-mongo')(session);
+const session = require("express-session");
+const MongoStore = require("connect-mongo")(session);
+const laundryRoutes = require("./routes/laundry");
 
 mongoose.Promise = Promise;
 mongoose
-.connect("mongodb://localhost/uber-for-loundry",{ useMongoClient: true })
-.then(() => {
-  console.log("Connected to Mongo!");
-})
-.catch(err => {
-  console.error("Error connecting to mongo", err);
-});
+  .connect(
+    "mongodb://localhost/uber-for-loundry",
+    { useMongoClient: true }
+  )
+  .then(() => {
+    console.log("Connected to Mongo!");
+  })
+  .catch(err => {
+    console.error("Error connecting to mongo", err);
+  });
 
 const app_name = require("./package.json").name;
-const debug = require("debug")(`${app_name}:${path.basename(__filename).split(".")[0]}`);
+const debug = require("debug")(
+  `${app_name}:${path.basename(__filename).split(".")[0]}`
+);
 const app = express();
 
 // Middleware Setup
@@ -31,18 +37,20 @@ app.use(logger("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use(session({
-  secret: 'never do your own laundry again',
-  resave: true,
-  saveUninitialized: true,
-  cookie: { maxAge: 60000 },
-  store: new MongoStore({
-    mongooseConnection: mongoose.connection,
-    ttl: 24 * 60 * 60 // 1 day
+app.use(
+  session({
+    secret: "never do your own laundry again",
+    resave: true,
+    saveUninitialized: true,
+    cookie: { maxAge: 60000 },
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+      ttl: 24 * 60 * 60 // 1 day
+    })
   })
-}));
+);
 
 app.use((req, res, next) => {
   if (req.session.currentUser) {
@@ -55,9 +63,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/', index);
-app.use('/', authRoutes);
-
+app.use("/", index);
+app.use("/", authRoutes);
+app.use("/", laundryRoutes);
 
 // Express View engine setup
 app.use(
